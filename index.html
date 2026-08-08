@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V12 Coaching – App Vorschau v3</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Manrope','sans-serif'] } } } }</script>
+<style>
+  :root{ --bg:#0A0E17; --card:#121A2C; --gold:#D4AF61; --gold-deep:#B8912F; --bronze:#A67C43; --blue:#6B8CBF; --amber:#D99A54; --muted:#8A93A6; }
+  body{ background:var(--bg); color:#F3F1EA; font-family:'Manrope',sans-serif; }
+  .card{ background:var(--card); border:1px solid rgba(255,255,255,0.06); }
+  .banner{ background:linear-gradient(90deg,var(--bronze),var(--gold)); color:#0A0E17; }
+  .bar-fill{ transition:width .5s ease; }
+  .fade{ animation:fadeIn .25s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+  .phone{ width:100%; max-width:390px; aspect-ratio:390/844; background:#000; border-radius:44px; padding:12px; box-shadow:0 30px 60px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); }
+  .screen{ background:var(--bg); border-radius:34px; height:100%; overflow:hidden; display:flex; flex-direction:column; position:relative; }
+  .notch{ position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:20; }
+  .pagewrap{ flex:1; overflow-y:auto; padding:14px 14px 90px 14px; }
+  .pagewrap::-webkit-scrollbar{ display:none; }
+  .navbtn{ display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9.5px; color:var(--muted); }
+  .navbtn.active{ color:var(--gold); }
+  input[type=checkbox]{ accent-color:var(--gold); width:16px; height:16px; }
+  .goldtext{ color:var(--gold); }
+  .chip{ background:#1b2336; border:1px solid rgba(255,255,255,0.08); border-radius:9999px; padding:5px 10px; font-size:10.5px; color:#c7cede; white-space:nowrap; }
+  .chip-active{ background:var(--gold); color:#0A0E17; border-color:var(--gold); font-weight:700; }
+  .set-input{ width:44px; background:#0d1220; border:1px solid #2a3346; border-radius:6px; padding:4px; font-size:11px; text-align:center; }
+  .icon-svg{ fill:none; stroke:var(--gold); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  textarea, input[type=text], input[type=number]{ color:#fff; }
+  .edit-mode .editable{ outline:1.5px dashed var(--gold); outline-offset:2px; border-radius:4px; cursor:pointer; position:relative; }
+  .edit-mode .editable:active{ background:rgba(212,175,97,0.12); }
+  .edit-mode .editable::after{ content:'✏️'; position:absolute; top:-9px; right:-9px; font-size:10px; background:var(--gold); border-radius:9999px; width:16px; height:16px; display:flex; align-items:center; justify-content:center; line-height:1; }
+</style>
+</head>
+<body class="p-3 md:p-8">
+<div id="app-loader" class="fixed inset-0 z-50 flex items-center justify-center" style="background:var(--bg);">
+  <p class="text-sm text-gray-400">Lade gespeicherte Daten…</p>
+</div>
+<div class="max-w-6xl mx-auto">
+
+  <div class="mb-4">
+    <h1 class="text-xl font-extrabold tracking-wide">V12 <span class="goldtext">COACHING</span></h1>
+    <p class="text-xs text-gray-500 mt-1">Vorschau — im fertigen Produkt sind das zwei komplett getrennte Apps. Klienten sehen niemals den Admin-Bereich; dieser Umschalter dient nur dir zur Kontrolle.</p>
+  </div>
+
+  <div class="flex gap-2 mb-6 flex-wrap">
+    <button onclick="switchMain('client')" id="btn-main-client" class="px-4 py-2 text-sm font-semibold rounded-lg" style="background:var(--gold); color:#0A0E17;">📱 Klienten-App</button>
+    <button onclick="switchMain('reg')" id="btn-main-reg" class="px-4 py-2 text-sm font-semibold rounded-lg bg-gray-800 text-gray-300">📝 Registrierung (neu)</button>
+    <button onclick="switchMain('admin')" id="btn-main-admin" class="px-4 py-2 text-sm font-semibold rounded-lg bg-gray-800 text-gray-300">🔒 Deine Admin-App</button>
+  </div>
+
+  <!-- ============================================================ REGISTRIERUNG (neuer Klient) ============================================================ -->
+  <div id="reg-main" class="hidden flex justify-center">
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="flex justify-between items-center px-6 pt-3 pb-1 text-xs text-gray-300 shrink-0">
+        <span>9:41</span><span class="tracking-widest">•••• 📶 🔋</span>
+      </div>
+      <div class="pagewrap">
+        <div id="reg-form-view">
+          <h2 class="text-lg font-bold mb-1">Willkommen bei V12</h2>
+          <p class="text-[11px] text-gray-500 mb-4">Melde dich mit deiner E-Mail an — dein Coach schaltet dich danach frei.</p>
+          <div class="card rounded-2xl p-4 space-y-3">
+            <div><label class="text-[10px] text-gray-500 block mb-1">Name</label><input type="text" id="reg-name" placeholder="Vor- und Nachname" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs"></div>
+            <div><label class="text-[10px] text-gray-500 block mb-1">E-Mail</label><input type="email" id="reg-email" placeholder="du@beispiel.de" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs"></div>
+            <button onclick="submitRegistration()" class="w-full py-2 rounded-lg text-xs font-semibold" style="background:var(--gold); color:#0A0E17;">Registrierung anfragen</button>
+          </div>
+        </div>
+        <div id="reg-success-view" class="hidden text-center pt-10">
+          <p class="text-3xl mb-3">✓</p>
+          <p class="text-sm font-semibold mb-1">Danke!</p>
+          <p class="text-[11px] text-gray-500">Dein Coach bestätigt deine Anmeldung im Kontrollzentrum — du bekommst danach Zugriff auf die App.</p>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ============================================================ CLIENT APP ============================================================ -->
+  <div id="client-main" class="flex justify-center">
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="flex justify-between items-center px-6 pt-3 pb-1 text-xs text-gray-300 shrink-0">
+        <span>9:41</span><span class="tracking-widest">•••• 📶 🔋</span>
+      </div>
+      <div class="pagewrap" id="c-pagewrap">
+
+        <!-- HEUTE -->
+        <div class="page fade" id="c-page-heute">
+          <h2 class="text-lg font-bold mb-4 editable" id="greeting-text" data-key="greeting" onclick="editField(this)">Guten Morgen, Max</h2>
+
+          <div class="card rounded-2xl p-5 mb-3">
+            <div class="flex justify-between items-start mb-5">
+              <div><h3 class="text-sm font-semibold text-gray-300 editable" data-key="macro-title" onclick="editField(this)">Heutige Makros</h3><p class="text-xs text-gray-500 editable" data-key="macro-sub" onclick="editField(this)">Von deinem Coach festgelegt</p></div>
+              <div class="text-right"><span class="text-3xl font-extrabold goldtext" id="t-cal-left">484</span><p class="text-xs text-gray-500">kcal übrig</p></div>
+            </div>
+            <div class="space-y-3">
+              <div><div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Protein</span><span><span id="t-p-cur">174</span>/<span id="t-p-tgt">180</span>g</span></div>
+                <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden"><div id="bar-p" class="bar-fill h-full rounded-full" style="background:var(--gold);"></div></div></div>
+              <div><div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Kohlenhydrate</span><span><span id="t-c-cur">120</span>/<span id="t-c-tgt">220</span>g</span></div>
+                <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden"><div id="bar-c" class="bar-fill h-full rounded-full" style="background:var(--blue);"></div></div></div>
+              <div><div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Fett</span><span><span id="t-f-cur">55</span>/<span id="t-f-tgt">70</span>g</span></div>
+                <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden"><div id="bar-f" class="bar-fill h-full rounded-full" style="background:var(--amber);"></div></div></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="card rounded-xl p-2.5">
+              <p class="text-[10px] text-gray-400 mb-1 editable" data-key="water-label" onclick="editField(this)">💧 Wasser</p>
+              <p class="text-sm font-bold" id="water-val">1,2 L</p>
+              <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden my-1.5"><div id="bar-water" class="bar-fill h-full rounded-full" style="background:var(--blue);"></div></div>
+              <div class="flex gap-1 mb-1"><button onclick="addWater(0.25)" class="flex-1 bg-gray-800 text-[9px] py-1 rounded">+0,25</button><button onclick="addWater(0.5)" class="flex-1 bg-gray-800 text-[9px] py-1 rounded">+0,5</button></div>
+              <input type="number" step="0.1" id="water-input" placeholder="genau L" class="w-full bg-gray-900 border border-gray-700 rounded px-1 py-1 text-[9px]">
+              <button onclick="setWaterExact()" class="w-full mt-1 bg-gray-800 text-[9px] py-1 rounded">Speichern</button>
+            </div>
+            <div class="card rounded-xl p-2.5">
+              <p class="text-[10px] text-gray-400 mb-1 editable" data-key="steps-label" onclick="editField(this)">👟 Schritte</p>
+              <p class="text-sm font-bold" id="steps-val">6.240</p>
+              <p class="text-[9px] text-gray-500 mb-1.5">Ziel mind. 10.000</p>
+              <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden mb-1.5"><div id="bar-steps" class="bar-fill h-full rounded-full" style="background:var(--gold);"></div></div>
+              <input type="number" id="steps-input" placeholder="eintragen" class="w-full bg-gray-900 border border-gray-700 rounded px-1 py-1 text-[9px]">
+              <button onclick="logSteps()" class="w-full mt-1 bg-gray-800 text-[9px] py-1 rounded">Speichern</button>
+            </div>
+            <div class="card rounded-xl p-2.5">
+              <p class="text-[10px] text-gray-400 mb-1 editable" data-key="sleep-label" onclick="editField(this)">😴 Schlaf</p>
+              <p class="text-sm font-bold" id="sleep-val">–</p>
+              <p class="text-[9px] text-gray-500 mb-1.5">Ziel mind. 7 Std.</p>
+              <input type="number" step="0.5" id="sleep-input" placeholder="Std." class="w-full bg-gray-900 border border-gray-700 rounded px-1 py-1 text-[9px]">
+              <button onclick="logSleep()" class="w-full mt-1 bg-gray-800 text-[9px] py-1 rounded">Speichern</button>
+            </div>
+          </div>
+
+          <div class="card rounded-2xl p-4 mb-3">
+            <p class="text-xs font-semibold text-gray-300 mb-2 editable" data-key="plan-title" onclick="editField(this)">📅 Heutiger Plan</p>
+            <div class="flex flex-wrap gap-2 mb-2" id="plan-chips"></div>
+            <div id="plan-detail"></div>
+          </div>
+
+          <button onclick="navTo('ernaehrung')" class="w-full card rounded-2xl p-4 mb-3 text-left flex justify-between items-center">
+            <span class="text-sm font-semibold">✨ Mahlzeit hinzufügen</span><span class="goldtext">→</span>
+          </button>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2 mt-2 editable" data-key="habits-title" onclick="editField(this)">TÄGLICHE GEWOHNHEITEN</p>
+          <div class="card rounded-2xl p-4 mb-3" id="habits-list"></div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2 editable" data-key="supp-title" onclick="editField(this)">SUPPLEMENTS HEUTE</p>
+          <div class="card rounded-2xl p-4" id="supp-list"></div>
+        </div>
+
+        <!-- TRAINING -->
+        <div class="page fade hidden" id="c-page-training">
+          <h2 class="text-lg font-bold mb-3">Training</h2>
+          <div class="flex gap-1 mb-3" id="range-chips-training"></div>
+          <div class="card rounded-2xl p-4 mb-3">
+            <div class="grid grid-cols-3 gap-2 text-center mb-3">
+              <div><p class="text-base font-bold goldtext">9</p><p class="text-[9px] text-gray-500">Einheiten</p></div>
+              <div><p class="text-base font-bold goldtext">7h 40m</p><p class="text-[9px] text-gray-500">Gesamtdauer</p></div>
+              <div><p class="text-base font-bold goldtext">38.900 kg</p><p class="text-[9px] text-gray-500">Volumen</p></div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 mb-3" id="category-tags"></div>
+            <p class="text-[10px] text-gray-500 mb-1">Top Progress</p>
+            <div class="space-y-1" id="top-progress"></div>
+          </div>
+
+          <div class="card rounded-2xl p-3 mb-3" style="border-color:rgba(212,175,97,0.3);">
+            <p class="text-xs font-semibold goldtext mb-1">🔥 Aufwärmen (immer zuerst)</p>
+            <p class="text-[10px] text-gray-400">10 Min. locker: Fahrrad, Laufband oder Crosstrainer. Danach bei jeder Übung 1–2 Aufwärmsätze mit niedrigem Gewicht (unten grau markiert) vor den Arbeitssätzen.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <button onclick="showWorkout('A')" id="wtab-A" class="wtab py-2 rounded-lg text-xs font-semibold">Training A</button>
+            <button onclick="showWorkout('B')" id="wtab-B" class="wtab py-2 rounded-lg text-xs font-semibold">Training B</button>
+            <button onclick="showWorkout('C')" id="wtab-C" class="wtab py-2 rounded-lg text-xs font-semibold">Training C</button>
+            <button onclick="showWorkout('kondition')" id="wtab-kondition" class="wtab py-2 rounded-lg text-xs font-semibold">Konditionseinheit</button>
+          </div>
+          <div id="workout-list" class="space-y-2 mb-3"></div>
+
+          <div class="flex gap-2 mb-3">
+            <button onclick="toggleWorkoutMenu()" class="flex-1 card rounded-xl py-2 text-xs font-semibold">➕ Neu</button>
+            <button onclick="togglePasteBox()" class="flex-1 card rounded-xl py-2 text-xs font-semibold">📋 Einfügen (KI)</button>
+          </div>
+          <div id="paste-box" class="hidden card rounded-2xl p-4 mb-3">
+            <p class="text-xs font-semibold text-gray-300 mb-2">Workout einfügen</p>
+            <textarea id="paste-input" placeholder="z.B. Dienstag: Bankdrücken 100x8, 110x6, 110x6 ..." class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs h-24 mb-2"></textarea>
+            <button onclick="parseWorkout()" id="parse-btn" class="w-full py-2 rounded-lg text-xs font-semibold" style="background:var(--gold); color:#0A0E17;">Mit KI einlesen</button>
+            <p class="text-[10px] text-gray-500 mt-1">Claude wandelt deinen eingefügten Log in strukturierte Übungen & Sätze um.</p>
+            <div id="parse-result" class="text-[11px] text-gray-300 mt-2 space-y-1"></div>
+          </div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">LEISTUNGSKURVE</p>
+          <div class="card rounded-2xl p-4 mb-3">
+            <div class="flex flex-wrap gap-1.5 mb-3" id="c-perf-chips"></div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-lg font-bold" id="c-perf-current">–</span>
+              <span class="text-xs" id="c-perf-trend">–</span>
+            </div>
+            <svg viewBox="0 0 300 90" class="w-full h-20" id="c-perf-chart"></svg>
+          </div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">VERLAUF — alle vergangenen Trainings</p>
+          <div class="card rounded-2xl p-4" id="history-list"></div>
+        </div>
+
+        <!-- ERNÄHRUNG -->
+        <div class="page fade hidden" id="c-page-ernaehrung">
+          <h2 class="text-lg font-bold mb-3">Ernährung</h2>
+
+          <div class="card rounded-2xl p-4 mb-3">
+            <p class="text-xs font-semibold text-gray-300 mb-2">✨ Mahlzeit hinzufügen</p>
+            <div class="flex gap-2 mb-2">
+              <input type="text" id="ai-food-input" placeholder="z.B. 200g Hähnchen mit 150g Reis" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs">
+              <button onclick="document.getElementById('food-photo-input').click()" class="px-3 bg-gray-800 rounded-lg text-sm">📷</button>
+            </div>
+            <input type="file" id="food-photo-input" accept="image/*" capture="environment" class="hidden" onchange="aiTrackPhoto(event)">
+            <button onclick="aiTrack()" id="ai-food-btn" class="w-full py-2 rounded-lg text-xs font-semibold" style="background:var(--gold); color:#0A0E17;">Text analysieren</button>
+            <p class="text-[10px] text-gray-500 mt-1">Foto-Button: Claude schätzt die Makros direkt aus dem Bild.</p>
+            <p id="ai-food-result" class="text-[11px] text-gray-400 mt-2"></p>
+          </div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">HEUTE GELOGGT</p>
+          <div class="mb-3" id="food-log"></div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">BAUKASTEN & HANDPORTIONEN</p>
+          <div class="card rounded-2xl p-4 mb-3">
+            <div class="space-y-2 mb-3" id="baukasten-table"></div>
+            <div class="bg-gray-900 rounded-xl p-3 mb-2">
+              <p class="text-[10px] font-semibold text-gray-300 mb-1">So wendest du es an</p>
+              <p class="text-[10px] text-gray-500">1. Protein = Handfläche · 2. Kohlenhydrate = wölbende Hand/Faust · 3. Gemüse = Faust · 4. Fette = Daumen</p>
+            </div>
+            <div class="bg-gray-900 rounded-xl p-3">
+              <p class="text-[10px] font-semibold text-gray-300 mb-1">Beispielteller</p>
+              <p class="text-[10px] text-gray-500">2× Handfläche Protein · 2× Faust Gemüse · 1–2× wölbende Hand Kohlenhydrate · 1× Daumen Fett</p>
+            </div>
+            <div class="bg-gray-900 rounded-xl p-3 mt-2">
+              <p class="text-[10px] text-gray-400">📲 Unklar oder Hilfe nötig? Melde dich gerne direkt bei deinem Coach per WhatsApp.</p>
+            </div>
+          </div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">ERNÄHRUNGSVORSCHLÄGE</p>
+          <div id="meal-accordion" class="space-y-2 mb-3"></div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">EINKAUFSLISTE</p>
+          <div class="mb-3" id="shopping-list"></div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">RESTAURANT-GUIDE</p>
+          <div class="card rounded-2xl p-4 space-y-3" id="restaurant-guide"></div>
+        </div>
+
+        <!-- FORTSCHRITT -->
+        <div class="page fade hidden" id="c-page-fortschritt">
+          <h2 class="text-lg font-bold mb-3">Fortschritt</h2>
+
+          <div class="card rounded-2xl p-4 mb-3">
+            <div class="flex justify-between items-center mb-2">
+              <div><p class="text-xl font-bold">91.2 kg</p><p class="text-xs" style="color:#7DD68B;">↓ 3,8 kg seit Start</p></div>
+              <div class="flex gap-1 text-[10px]" id="range-chips-weight"></div>
+            </div>
+            <svg viewBox="0 0 300 100" class="w-full h-24" id="weight-chart"></svg>
+            <p class="text-[10px] text-gray-500 mt-1">Fortlaufend seit Tag 1 — kein Enddatum.</p>
+          </div>
+
+          <div class="card rounded-2xl p-4 mb-3">
+            <p class="text-xs font-semibold text-gray-300 mb-2">🏋️ Trainings-Fortschritt</p>
+            <div class="flex flex-wrap gap-1.5 mb-2" id="category-tags-2"></div>
+            <div class="space-y-1 mb-2" id="top-progress-2"></div>
+            <button onclick="navTo('training')" class="text-[10px] goldtext">→ Alle Trainingsdetails ansehen</button>
+          </div>
+
+          <div class="card rounded-2xl p-4 mb-3">
+            <p class="text-xs font-semibold text-gray-300 mb-2">📋 Wöchentlicher Check-in — Woche 6</p>
+            <div class="grid grid-cols-2 gap-2 text-[11px] mb-2">
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">Schritte Ø</p><p class="font-semibold">7.850</p></div>
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">Schlaf Ø</p><p class="font-semibold">7,1 Std</p></div>
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">Wasser Ø</p><p class="font-semibold">2,8 L</p></div>
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">Ernährung</p><p class="font-semibold">95%</p></div>
+            </div>
+          </div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">VERLAUF (seit Tag 1)</p>
+          <div class="card rounded-2xl p-4 mb-3 space-y-1 text-[11px] text-gray-400">
+            <div class="flex justify-between"><span>Woche 6 (heute)</span><span>91.2 kg</span></div>
+            <div class="flex justify-between"><span>Woche 5</span><span>92.4 kg</span></div>
+            <div class="flex justify-between"><span>Woche 4</span><span>93.1 kg</span></div>
+            <div class="flex justify-between"><span>Woche 1 (Start)</span><span>95.0 kg</span></div>
+            <p class="text-[10px] text-gray-600 pt-1">… vollständiger Verlauf läuft fortlaufend weiter.</p>
+          </div>
+
+          <p class="text-xs font-semibold text-gray-400 mb-2">FORTSCHRITTSFOTOS</p>
+          <div class="card rounded-2xl p-4 mb-3">
+            <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="addPhoto(event)">
+            <button onclick="document.getElementById('photo-input').click()" class="w-full py-2 rounded-lg text-xs font-semibold mb-2" style="background:var(--gold); color:#0A0E17;">📸 Foto hochladen</button>
+            <div class="grid grid-cols-4 gap-1.5" id="photo-grid"></div>
+          </div>
+
+          <div class="card rounded-2xl p-4 text-[11px] text-gray-400 space-y-1">
+            <div class="flex justify-between"><span class="text-gray-500">Start-Datum</span><span id="meta-start">05.08.2026</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Nächster Check-in</span><span id="meta-nextcheckin" class="goldtext"></span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Video Call</span><a href="#" id="meta-zoom" target="_blank" rel="noopener" class="goldtext font-medium">Zoom</a></div>
+          </div>
+        </div>
+
+        <!-- CHAT -->
+        <div class="page fade hidden" id="c-page-chat">
+          <h2 class="text-lg font-bold mb-3">Frag deinen Coach</h2>
+          <p class="text-[11px] text-gray-500 mb-3 editable" id="chat-intro-text" data-key="chat-intro" onclick="editField(this)">Stelle deine Frage direkt hier oder frage deinen Coach bei WhatsApp.</p>
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            <button onclick="quickChat('Ich habe Hunger, was soll ich essen?')" class="chip">Ich habe Hunger, was soll ich essen?</button>
+            <button onclick="quickChat('Wie stehe ich heute bei Protein da?')" class="chip">Wie steht's um mein Protein?</button>
+            <button onclick="quickChat('Was soll ich als nächstes trainieren?')" class="chip">Was trainiere ich als nächstes?</button>
+          </div>
+          <div id="chat-thread" class="space-y-2 mb-3"></div>
+          <div class="flex gap-2">
+            <input type="text" id="chat-input" placeholder="Frag etwas zu deinem Tag..." class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs">
+            <button onclick="sendChat()" id="chat-send-btn" class="px-4 py-2 rounded-lg text-xs font-semibold" style="background:var(--gold); color:#0A0E17;">→</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="absolute bottom-0 left-0 right-0 flex justify-around items-center py-3 border-t border-gray-800" style="background:rgba(10,14,23,0.95);">
+        <button onclick="navTo('heute')" class="navbtn active" id="c-nav-heute"><span>🏠</span>Heute</button>
+        <button onclick="navTo('training')" class="navbtn" id="c-nav-training"><span>🏋️</span>Training</button>
+        <button onclick="navTo('ernaehrung')" class="navbtn" id="c-nav-ernaehrung"><span>🍽️</span>Ernährung</button>
+        <button onclick="navTo('fortschritt')" class="navbtn" id="c-nav-fortschritt"><span>📈</span>Fortschritt</button>
+        <button onclick="navTo('chat')" class="navbtn" id="c-nav-chat"><span>💬</span>Coach</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ============================================================ ADMIN APP ============================================================ -->
+  <div id="admin-main" class="hidden flex justify-center">
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="flex justify-between items-center px-6 pt-3 pb-1 text-xs text-gray-300 shrink-0">
+        <span>9:41</span><span class="tracking-widest">•••• 📶 🔋</span>
+      </div>
+      <div class="pagewrap" id="a-pagewrap">
+
+        <!-- KLIENTEN LISTE -->
+        <div class="page fade" id="a-page-klienten-liste">
+          <h2 class="text-lg font-bold mb-1">Deine Klienten</h2>
+          <p class="text-[11px] text-gray-500 mb-3">🔒 Nur für dich sichtbar</p>
+          <div id="pending-reg-box" class="mb-3"></div>
+          <button onclick="openClient()" class="w-full card rounded-2xl p-4 text-left flex justify-between items-center mb-2">
+            <div><p class="text-sm font-semibold">Max Mustermann</p><p class="text-[11px] text-gray-500">2.230 kcal · letzter Check-in vor 2 Tagen</p></div>
+            <span class="goldtext">→</span>
+          </button>
+          <p class="text-[11px] text-gray-600 text-center mt-4">Weitere Klienten erscheinen hier, sobald du sie hinzufügst.</p>
+        </div>
+
+        <!-- POSTFACH -->
+        <div class="page fade hidden" id="a-page-postfach">
+          <h2 class="text-lg font-bold mb-1">Postfach</h2>
+          <p class="text-[11px] text-gray-500 mb-3">Fragen & Aktivitäten all deiner Klienten, live.</p>
+          <div id="postfach-list" class="space-y-2"></div>
+        </div>
+
+        <!-- KLIENT DETAIL -->
+        <div class="page fade hidden" id="a-page-klient-detail">
+          <button onclick="closeClient()" class="text-xs text-gray-400 mb-2">← Alle Klienten</button>
+          <h2 class="text-lg font-bold mb-3">Max Mustermann</h2>
+
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="card rounded-xl p-2 text-center"><p class="text-[9px] text-gray-500">Schritte</p><p class="text-sm font-bold" id="ad-steps">–</p></div>
+            <div class="card rounded-xl p-2 text-center"><p class="text-[9px] text-gray-500">Wasser</p><p class="text-sm font-bold" id="ad-water">–</p></div>
+            <div class="card rounded-xl p-2 text-center"><p class="text-[9px] text-gray-500">Schlaf</p><p class="text-sm font-bold" id="ad-sleep">–</p></div>
+          </div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">AKTIVITÄTEN-LOG (KI-Berechnung)</div>
+          <div class="card rounded-2xl p-3 mb-3 text-[11px] space-y-1" id="ad-activity"></div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">TRAININGS-LOG — alle vergangenen Trainings</div>
+          <div class="card rounded-2xl p-3 mb-3 text-[11px]" id="ad-training-log"></div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">LEISTUNGSKURVE</div>
+          <div class="card rounded-2xl p-3 mb-3">
+            <div class="flex flex-wrap gap-1.5 mb-3" id="ad-perf-chips"></div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-base font-bold" id="ad-perf-current">–</span>
+              <span class="text-[11px]" id="ad-perf-trend">–</span>
+            </div>
+            <svg viewBox="0 0 300 80" class="w-full h-16" id="ad-perf-chart"></svg>
+          </div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">ERNÄHRUNGS-LOG (HEUTE)</div>
+          <div class="card rounded-2xl p-3 mb-3 text-[11px] space-y-1" id="ad-food-log"></div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">GEWOHNHEITEN & SUPPLEMENTS TREUE</div>
+          <div class="card rounded-2xl p-3 mb-3 text-[11px]">
+            <div class="flex justify-between mb-1"><span class="text-gray-400">Gewohnheiten erledigt</span><span class="font-semibold" id="ad-habits-pct">0%</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Supplements erledigt</span><span class="font-semibold" id="ad-supp-pct">0%</span></div>
+          </div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">FORTSCHRITTSFOTOS</div>
+          <div class="card rounded-2xl p-3 mb-3"><div class="grid grid-cols-4 gap-1.5" id="ad-photo-grid"></div><p class="text-[10px] text-gray-500 mt-1" id="ad-photo-empty">Noch keine Fotos hochgeladen.</p></div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">CHAT-VERLAUF</div>
+          <div class="card rounded-2xl p-3 mb-3 text-[11px] space-y-1.5" id="ad-chat-log"><p class="text-gray-600">Noch keine Fragen gestellt.</p></div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">STAMMDATEN & BERECHNUNG</div>
+          <div class="card rounded-2xl p-3 mb-3">
+            <div class="grid grid-cols-2 gap-2 text-[11px] mb-3">
+              <div><label class="text-gray-500 block mb-0.5">Geschlecht</label>
+                <select id="c-sex" onchange="calc()" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1">
+                  <option value="m">Männlich</option><option value="w">Weiblich</option>
+                </select></div>
+              <div><label class="text-gray-500 block mb-0.5">Alter</label><input type="number" id="c-age" value="34" oninput="calc()" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1"></div>
+              <div><label class="text-gray-500 block mb-0.5">Größe (cm)</label><input type="number" id="c-height" value="178" oninput="calc()" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1"></div>
+              <div><label class="text-gray-500 block mb-0.5">Gewicht (kg)</label><input type="number" id="c-weight" value="91.2" oninput="calc()" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1"></div>
+              <div><label class="text-gray-500 block mb-0.5">PAL</label>
+                <select id="c-pal" onchange="calc()" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1">
+                  <option value="1.2">1.2</option><option value="1.4">1.4</option><option value="1.6" selected>1.6</option><option value="1.8">1.8</option>
+                </select></div>
+            </div>
+            <div class="flex gap-3 text-[11px] mb-3">
+              <label class="flex items-center gap-1"><input type="checkbox" id="c-fat" checked onchange="calc()">Fettabbau</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="c-muscle" checked onchange="calc()">Muskelaufbau</label>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] mb-3">
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">BMR</p><p class="font-bold" id="out-bmr">–</p></div>
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">TDEE</p><p class="font-bold" id="out-tdee">–</p></div>
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">Ziel-Kalorien</p><p class="font-bold goldtext" id="out-cal">–</p></div>
+              <div class="bg-gray-900 rounded-lg p-2"><p class="text-gray-500">Protein</p><p class="font-bold" id="out-protein">–</p></div>
+              <div class="bg-gray-900 rounded-lg p-2 col-span-2"><p class="text-gray-500">Fett / Kohlenhydrate</p><p class="font-bold" id="out-fatcarb">–</p></div>
+            </div>
+            <button onclick="pushToClient()" class="w-full py-2 rounded-lg text-xs font-semibold" style="background:var(--gold); color:#0A0E17;">Push an Klient →</button>
+          </div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">WENN-DANN-MATRIX</div>
+          <div class="card rounded-2xl p-3 mb-3 text-[10.5px] text-gray-400 space-y-1.5">
+            <p>Plateau 2 Wo. (Fettabbau) → Kohlenhydrate −1 Portion</p>
+            <p>Plateau 2 Wo. (Muskelaufbau) → Kohlenhydrate +1 Portion</p>
+            <p>Energie/Schlaf 3+ Tage niedrig → Trainingsintensität reduzieren</p>
+            <p>Trainingsgewichte stagnieren → 1 Woche weniger Volumen</p>
+          </div>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">INTERNE NOTIZEN</div>
+          <textarea class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs h-16 mb-3" placeholder="Für Klient unsichtbar..."></textarea>
+
+          <div class="banner rounded-xl px-3 py-1.5 text-xs font-bold mb-2">TERMINE</div>
+          <div class="card rounded-2xl p-3 text-[11px] space-y-1">
+            <div class="flex justify-between"><span class="text-gray-500">Start</span><span id="ad-start">05.08.2026</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Nächster Check-in</span><span class="goldtext" id="ad-nextcheckin"></span></div>
+          </div>
+        </div>
+
+        <!-- EDITOR -->
+        <div class="page fade hidden" id="a-page-editor">
+          <h2 class="text-lg font-bold mb-3">Design-Editor</h2>
+          <p class="text-[11px] text-gray-500 mb-3">Änderungen gelten sofort in beiden Apps.</p>
+          <div class="card rounded-2xl p-4 mb-3 space-y-3">
+            <p class="text-xs font-semibold text-gray-300">Farben</p>
+            <div class="flex justify-between items-center"><span class="text-xs">Akzentfarbe (Gold)</span><input type="color" value="#D4AF61" oninput="setVar('--gold', this.value)"></div>
+            <div class="flex justify-between items-center"><span class="text-xs">Sekundärfarbe (Bronze)</span><input type="color" value="#A67C43" oninput="setVar('--bronze', this.value)"></div>
+            <div class="flex justify-between items-center"><span class="text-xs">Kartenfarbe</span><input type="color" value="#121A2C" oninput="setVar('--card', this.value)"></div>
+            <button onclick="resetTheme()" class="w-full bg-gray-800 py-2 rounded-lg text-xs font-semibold">Zurücksetzen</button>
+          </div>
+          <div class="card rounded-2xl p-4 mb-3 space-y-2">
+            <div class="flex justify-between items-center">
+              <div><p class="text-xs font-semibold text-gray-300">✏️ Bearbeitungsmodus</p><p class="text-[10px] text-gray-500">Jedes Feld auf jeder Seite direkt antippen & ändern</p></div>
+              <button onclick="toggleEditMode()" id="editmode-toggle" class="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-gray-800 text-gray-300">Aus</button>
+            </div>
+            <div id="editmode-hint" class="hidden text-[10px] text-gray-400 bg-gray-900 rounded-lg p-2">Aktiv! Wechsle jetzt zu "📱 Klienten-App" oben — jedes Feld mit gestricheltem Rand + ✏️ kannst du antippen und neu schreiben.</div>
+            <button onclick="resetOverrides()" class="w-full bg-gray-800 py-1.5 rounded-lg text-[11px] font-semibold">Alle Texte zurücksetzen</button>
+          </div>
+          <div class="card rounded-2xl p-4 mb-3 text-[11px] text-gray-400">
+            <p class="text-xs font-semibold text-gray-300 mb-1">Vorlage — so funktioniert's</p>
+            Das ist die Vorlage für "Heute". Bestätigst du das Prinzip, ziehe ich dasselbe System über Training, Ernährung, Fortschritt, Coach-Chat und deine gesamte Admin-App — wirklich jedes Feld wird antippbar.
+          </div>
+          <div class="card rounded-2xl p-4 text-[11px] text-gray-400">Vorschau: <span class="chip chip-active ml-2">Beispiel-Chip</span></div>
+        </div>
+
+        <!-- EINSTELLUNGEN -->
+        <div class="page fade hidden" id="a-page-settings">
+          <h2 class="text-lg font-bold mb-3">Einstellungen</h2>
+          <div class="card rounded-2xl p-4 mb-3">
+            <label class="text-xs text-gray-400 block mb-1">Zoom-Link</label>
+            <input type="text" id="settings-zoom" value="zoom.us/j/v12coaching" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 text-xs" oninput="updateZoom()">
+          </div>
+          <div class="card rounded-2xl p-4 mb-3">
+            <p class="text-xs text-gray-400 mb-1">Check-in-Rhythmus</p>
+            <p class="text-sm font-semibold">Alle 7 Tage</p>
+          </div>
+          <div class="card rounded-2xl p-4 mb-3">
+            <p class="text-xs font-semibold text-gray-300 mb-1">🔒 Admin-PIN</p>
+            <p class="text-[10px] text-gray-500 mb-2">Schützt diesen Bereich. Standard: 1234 — bitte gleich ändern.</p>
+            <button onclick="changeAdminPin()" class="w-full bg-gray-800 py-2 rounded-lg text-xs font-semibold">PIN ändern</button>
+          </div>
+          <div class="card rounded-2xl p-4 text-[11px] text-gray-400">Diese App läuft im Browser als Web-App — funktioniert schon jetzt auf deinem iPhone und später genauso auf deinem MacBook, sobald du eins hast.</div>
+        </div>
+
+      </div>
+      <div class="absolute bottom-0 left-0 right-0 flex justify-around items-center py-3 border-t border-gray-800" style="background:rgba(10,14,23,0.95);">
+        <button onclick="navToAdmin('klienten-liste')" class="navbtn active" id="a-nav-klienten-liste"><span>👥</span>Klienten</button>
+        <button onclick="navToAdmin('postfach')" class="navbtn" id="a-nav-postfach"><span class="relative">✉️<span id="postfach-badge" class="hidden absolute -top-1 -right-2 bg-red-500 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center"></span></span>Postfach</button>
+        <button onclick="navToAdmin('editor')" class="navbtn" id="a-nav-editor"><span>🎨</span>Editor</button>
+        <button onclick="navToAdmin('settings')" class="navbtn" id="a-nav-settings"><span>⚙️</span>Mehr</button>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<script>
+// ============ SHARED STATE ============
+let state = { calTarget:2230, proteinTarget:180, carbTarget:220, fatTarget:70, calConsumed:1746, proteinCurrent:174, carbCurrent:120, fatCurrent:55,
+  water:1.2, waterGoal:3.5, steps:6240, stepsGoal:10000, sleep:null, sleepGoal:7, plan:null, startDate:new Date(2026,7,5), zoomLink:'zoom.us/j/v12coaching' };
+let habitsChecked = {}, supplementsChecked = {}, activityLog = [], chatLog = [], photos = [], notifications = [];
+let pendingRegistrations = [{name:'Julia Wagner', email:'julia.wagner@email.de'}];
+let editMode = false, contentOverrides = {};
+
+// ============ ECHTE PERSISTENZ (window.storage) ============
+const STORAGE_KEY = 'v12-client-data';
+let storageReady = false;
+async function saveState(){
+  try{
+    const payload = { state:{...state, startDate:state.startDate.toISOString()}, habitsChecked, supplementsChecked, activityLog, chatLog, photos, notifications, pendingRegistrations, contentOverrides, foodLog, exVariantState, exVariantPending };
+    await window.storage.set(STORAGE_KEY, JSON.stringify(payload), true);
+  }catch(e){ console.error('Speichern fehlgeschlagen:', e); }
+}
+async function loadState(){
+  try{
+    const result = await window.storage.get(STORAGE_KEY, true);
+    if(result && result.value){
+      const d = JSON.parse(result.value);
+      if(d.state){ Object.assign(state, d.state); state.startDate = new Date(d.state.startDate); }
+      if(d.habitsChecked) habitsChecked = d.habitsChecked;
+      if(d.supplementsChecked) supplementsChecked = d.supplementsChecked;
+      if(d.activityLog) activityLog = d.activityLog;
+      if(d.chatLog) chatLog = d.chatLog;
+      if(d.photos) photos = d.photos;
+      if(d.notifications) notifications = d.notifications;
+      if(d.pendingRegistrations) pendingRegistrations = d.pendingRegistrations;
+      if(d.contentOverrides) contentOverrides = d.contentOverrides;
+      if(d.foodLog){ foodLog.length=0; foodLog.push(...d.foodLog); }
+      if(d.exVariantState) exVariantState = d.exVariantState;
+      if(d.exVariantPending) exVariantPending = d.exVariantPending;
+    }
+  }catch(e){ console.log('Noch keine gespeicherten Daten — starte mit Standardwerten.'); }
+  storageReady = true;
+}
+function applyContentOverrides(){
+  document.querySelectorAll('.editable[data-key]').forEach(el=>{
+    const k=el.dataset.key; if(contentOverrides[k]!==undefined) el.textContent=contentOverrides[k];
+  });
+}
+// ============ ADMIN PIN-SCHUTZ ============
+let adminUnlocked = false;
+async function checkAdminPin(){
+  if(adminUnlocked) return true;
+  let pinResult;
+  try{ pinResult = await window.storage.get('v12-admin-pin', true); }catch(e){ pinResult=null; }
+  const savedPin = pinResult && pinResult.value ? pinResult.value : '1234';
+  const entered = prompt('Admin-PIN eingeben:');
+  if(entered===null) return false;
+  if(entered===savedPin){ adminUnlocked=true; return true; }
+  alert('Falscher PIN.'); return false;
+}
+async function changeAdminPin(){
+  const neu = prompt('Neuen Admin-PIN festlegen (mind. 4 Zeichen):');
+  if(!neu || neu.length<4) return;
+  try{ await window.storage.set('v12-admin-pin', neu, true); alert('✓ PIN geändert.'); }catch(e){ alert('Speichern fehlgeschlagen.'); }
+}
+function toggleEditMode(){
+  editMode = !editMode;
+  const btn=document.getElementById('editmode-toggle'), hint=document.getElementById('editmode-hint');
+  document.getElementById('client-main').classList.toggle('edit-mode', editMode);
+  if(editMode){ btn.textContent='An'; btn.style.background='var(--gold)'; btn.style.color='#0A0E17'; hint.classList.remove('hidden'); }
+  else { btn.textContent='Aus'; btn.style.background=''; btn.style.color=''; btn.className='px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-gray-800 text-gray-300'; hint.classList.add('hidden'); }
+}
+function editField(el){
+  if(!editMode) return;
+  const key = el.dataset.key;
+  const v = prompt('Text bearbeiten:', contentOverrides[key] !== undefined ? contentOverrides[key] : el.textContent);
+  if(v===null || v.trim()==='') return;
+  contentOverrides[key]=v; el.textContent=v; saveState();
+}
+async function resetOverrides(){
+  contentOverrides = {};
+  await saveState();
+  alert('Alle angepassten Texte werden zurückgesetzt.');
+  location.reload();
+}
+function pushNotification(icon, text){
+  notifications.unshift({icon:icon, text:text, time:'Gerade eben'});
+  renderPostfach();
+}
+function renderPostfach(){
+  const badge = document.getElementById('postfach-badge');
+  if(badge){ if(notifications.length){ badge.textContent=notifications.length; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
+  const list = document.getElementById('postfach-list');
+  if(!list) return;
+  list.innerHTML = notifications.length
+    ? notifications.map(n=>`<div class="card rounded-xl p-3 flex gap-2"><span class="text-lg">${n.icon}</span><div class="flex-1"><p class="text-xs">${n.text}</p><p class="text-[9px] text-gray-500">${n.time}</p></div></div>`).join('')
+    : '<p class="text-gray-600 text-center text-xs mt-6">Noch keine Ereignisse.</p>';
+}
+
+const HABITS = [ ['schritte','👟','10.000 Schritte'], ['wasser','💧','3–4 Liter Wasser'], ['zucker','🥤','Zuckergetränke vermeiden'], ['schlaf','😴','Min. 7 Std. Schlaf'], ['achtsam','🍽️','Achtsam essen (Handy weg)'], ['abend','🌙','30–60 Min. vor Schlafen kein Handy'] ];
+const SUPPLEMENTS = [ ['Whey Protein','Nach Bedarf, angepasst an Ernährung'], ['Creatin Monohydrat','5–10g täglich (Dauereinnahme)'], ['Magnesium Bisglycinat','~300mg nach letzter Mahlzeit/vor dem Schlafen'], ['Zink Bisglycinat','~25mg nach letzter Mahlzeit'], ['Citrullinmalat','~6000mg (6g) vor dem Training'] ];
+
+const workouts = {
+  A:[["Langhantel-Kniebeugen / Beinpresse","3×6–8","2–3 Min",[[100,8],[110,6],[110,6]],["Langhantel-Kniebeugen","Beinpresse"]], ["Bankdrücken (LH/KH)","3×6–8","2 Min",[[80,8],[85,6],[85,6]],["Langhantel","Kurzhantel"]], ["Latziehen Obergriff / Klimmzüge","3×8–10","2 Min",[[55,10],[60,9],[60,8]],["Latziehen Obergriff","Klimmzüge"]], ["Schulterdrücken (Seated DB)","3×8–10","90 Sek",[[22,10],[24,9],[24,8]],null], ["Cable Crunch","3×12–15","60 Sek",[[35,15],[40,13],[40,12]],null]],
+  B:[["Rumänisches Kreuzheben (RDL)","3×6–8","2–3 Min",[[100,8],[110,6],[110,6]],null], ["Vorgebeugtes LH-Rudern","3×6–8","2 Min",[[70,8],[75,6],[75,6]],null], ["Schrägbankdrücken (KH)","3×8–10","2 Min",[[30,10],[32,9],[32,8]],null], ["Seitheben (Kabel/KH)","4×12–15","60 Sek",[[10,15],[12,13],[12,12],[10,15]],["Kabel","Kurzhantel"]], ["Bizeps/Trizeps Superset","3×10–12","90 Sek",[[14,12],[14,12],[14,10]],null]],
+  C:[["Hack Squat / Bulgarian Split Squats","3×8–10","2 Min",[[90,10],[95,9],[95,8]],["Hack Squat","Bulgarian Split Squats"]], ["Brustpresse / Dips","3×8–10","90 Sek",[[60,10],[65,9],[65,8]],["Brustpresse","Dips"]], ["Enges Rudern (Kabel, sitzend)","3×10–12","90 Sek",[[50,12],[55,11],[55,10]],null], ["Butterfly / Reverse Fly Superset","3×12–15","60 Sek",[[25,15],[25,14],[25,12]],null], ["Wadenheben & Plank","3×15 & max","60 Sek",[[60,15],[60,15],[60,15]],null]]
+};
+let exVariantState = {}, exVariantPending = {};
+
+const meals = [
+  {title:"Frühstück", opts:["Protein-Porridge: 1 wölb. Hand Haferflocken, 1 Scoop Whey/Skyr, 1 Faust Beeren, 1 Daumen Erdnussbutter","Eier-Gemüse-Omelett: 3–4 Eier, 1–2 Fäuste Spinat/Champignons/Tomaten, 1 Scheibe Vollkornbrot","Griech. Joghurt-Bowl: 1–2 Handflächen Joghurt, 1 wölb. Hand Müsli, 1 Faust Apfel/Birne, 1 Daumen Walnüsse"]},
+  {title:"Mittagessen", opts:["Hähnchen-Reis-Bowl: 1 Handfläche Hähnchen, 1–2 Hände Basmati-Reis, 1–2 Fäuste Brokkoli, 1 Daumen Olivenöl","Rinderhack-Süßkartoffel-Pfanne: 1 Handfläche Rinderhack, 1 Hand Süßkartoffel-Wedges, 1 Faust Zucchini/Paprika, Guacamole","Lachs-Quinoa-Salat: 1 Handfläche Lachs, 1 Hand Quinoa, große Schüssel Salat, Olivenöl+Balsamico"]},
+  {title:"Abendessen", opts:["Asiatische Hähnchen-Gemüse-Pfanne: 1 Handfläche Hähnchen, 1 Hand Reisnudeln, 2 Fäuste Wok-Gemüse, Erdnuss-Soße","Magerquark-Kräuter-Dip: 1–2 Handflächen Magerquark, 1 Hand Drillingskartoffeln, 2 Fäuste Ofengemüse","Hähnchen-/Thunfisch-Wraps: 1 Handfläche Hähnchen/Thunfisch, 1–2 Vollkorn-Wraps, Salat, Tzatziki"]}
+];
+const shopping = { "Protein":["Hähnchenbrust","Putenbrust","Mag. Rinderhack","Lachs","Eier (L)","Magerquark","Skyr","Whey-Protein"], "Kohlenhydrate":["Haferflocken","Reis (Basmati/Jasmin)","Kartoffeln","Süßkartoffeln","Vollkornbrot","Vollkornnudeln","Quinoa","Vollkorn-Wraps"], "Gemüse & Obst":["Brokkoli","Zucchini","Paprika","Spinat","Tomaten","Gurke","Blattsalat","Beeren"], "Gesunde Fette":["Olivenöl","Avocado","Mandeln/Walnüsse","Erdnussmus","Chiasamen"] };
+const restaurantGuide = {
+  regeln:[["Sauce & Dressing separat","Der größte Feind des Kaloriendefizits sind versteckte Fette in Soßen/Dressings. Immer extra bestellen — max. 1 Daumen."],["Clevere Zubereitung wählen","Bevorzuge gegrillt, im Ofen, gedünstet oder naturbelassen. Vermeide paniert, frittiert oder in Butter gebraten."],["An den Baukasten anlehnen","Zerlege jedes Gericht in Protein/Kohlenhydrate/Gemüse/Fett — genau wie zuhause."]],
+  kuechen:[["Italiener","Fisch-/Fleischgerichte mit Ofenkartoffeln/Gemüse, oder Pizza mit dünnem Boden. Vorsicht bei cremigen Sahne-/Pesto-Soßen."],["Asiatisch","Wok-Gerichte mit Gemüse, Reis und Hähnchen/Rind/Tofu. Bei Sushi: primär Nigiri/Maki statt frittierter Rollen."],["Steakhouse","Steak, Filet oder Fisch mit großer Ofenkartoffel + Beilagensalat. Kräuterbutter separat servieren lassen."]],
+  mindset:"80/20-Prinzip: Ein Restaurantbesuch bringt kein System ins Wanken. Kein Ausgleichsfasten, kein Hungern — einfach konsequent am nächsten Tag im gewohnten Rhythmus weitermachen."
+};
+const categoryTags = [["Training A",4],["Training B",4],["Training C",3],["Konditionseinheit",2],["Regenerationstag",2]];
+const topProgress = [["Bankdrücken",18],["Rumän. Kreuzheben",14],["Schulterdrücken",11]];
+const historyList = [
+  {date:'Do, 6. Aug', label:'Training B — 5 Übungen', detail:[["Rumänisches Kreuzheben (RDL)","110kg×6, 110kg×6, 100kg×8"],["Vorgebeugtes LH-Rudern","75kg×6, 75kg×6, 70kg×8"],["Schrägbankdrücken (KH)","32kg×8, 32kg×8, 30kg×10"],["Seitheben","12kg×13, 12kg×12, 10kg×15, 10kg×15"],["Bizeps/Trizeps Superset","14kg×12, 14kg×12, 14kg×10"]]},
+  {date:'Di, 4. Aug', label:'Training A — 5 Übungen', detail:[["Langhantel-Kniebeugen","110kg×6, 110kg×6, 100kg×8"],["Bankdrücken (LH)","85kg×6, 85kg×6, 80kg×8"],["Latziehen Obergriff","60kg×8, 60kg×9, 55kg×10"],["Schulterdrücken (DB)","24kg×8, 24kg×9, 22kg×10"],["Cable Crunch","40kg×12, 40kg×13, 35kg×15"]]},
+  {date:'Sa, 2. Aug', label:'Konditionseinheit — 45 Min Laufen', detail:[["Laufen","45 Minuten, ~410 kcal geschätzt (KI)"]]},
+  {date:'Do, 30. Jul', label:'Training C — 5 Übungen', detail:[["Hack Squat","95kg×8, 95kg×9, 90kg×10"],["Brustpresse / Dips","65kg×8, 65kg×9, 60kg×10"],["Enges Rudern (Kabel)","55kg×10, 55kg×11, 50kg×12"],["Butterfly/Reverse Fly","25kg×12, 25kg×14, 25kg×15"],["Wadenheben & Plank","60kg×15, 60kg×15, 60kg×15"]]}
+];
+const weightData = { "Woche":[91.6,91.4,91.3,91.2], "Monat":[92.4,92.0,91.6,91.2], "Gesamt":[95,94.2,93.5,92.8,92.1,91.6,91.2] };
+const exerciseTrend = {
+  "Bankdrücken (LH)":[{d:'14. Jul',w:75},{d:'21. Jul',w:78},{d:'28. Jul',w:80},{d:'4. Aug',w:85}],
+  "Rumänisches Kreuzheben (RDL)":[{d:'15. Jul',w:95},{d:'22. Jul',w:100},{d:'29. Jul',w:105},{d:'5. Aug',w:110}],
+  "Schulterdrücken (DB)":[{d:'14. Jul',w:20},{d:'21. Jul',w:20},{d:'28. Jul',w:22},{d:'4. Aug',w:24}],
+  "Langhantel-Kniebeugen":[{d:'14. Jul',w:95},{d:'21. Jul',w:100},{d:'28. Jul',w:105},{d:'4. Aug',w:110}]
+};
+
+// ============ NAVIGATION ============
+async function switchMain(v){
+  const c=document.getElementById('client-main'), a=document.getElementById('admin-main'), r=document.getElementById('reg-main');
+  const bc=document.getElementById('btn-main-client'), ba=document.getElementById('btn-main-admin'), br=document.getElementById('btn-main-reg');
+  const offStyle='px-4 py-2 text-sm font-semibold rounded-lg bg-gray-800 text-gray-300';
+  if(v==='admin'){ const ok = await checkAdminPin(); if(!ok) return; }
+  [c,a,r].forEach(el=>el.classList.add('hidden'));
+  [bc,ba,br].forEach(b=>{ b.className=offStyle; b.style.background=''; b.style.color=''; });
+  if(v==='client'){ c.classList.remove('hidden'); bc.style.background='var(--gold)'; bc.style.color='#0A0E17'; bc.className='px-4 py-2 text-sm font-semibold rounded-lg'; }
+  else if(v==='reg'){ r.classList.remove('hidden'); br.style.background='var(--gold)'; br.style.color='#0A0E17'; br.className='px-4 py-2 text-sm font-semibold rounded-lg';
+    document.getElementById('reg-form-view').classList.remove('hidden'); document.getElementById('reg-success-view').classList.add('hidden');
+    document.getElementById('reg-name').value=''; document.getElementById('reg-email').value='';
+  }
+  else { a.classList.remove('hidden'); ba.style.background='var(--gold)'; ba.style.color='#0A0E17'; ba.className='px-4 py-2 text-sm font-semibold rounded-lg'; refreshAdmin(); }
+}
+function submitRegistration(){
+  const name=document.getElementById('reg-name').value.trim(), email=document.getElementById('reg-email').value.trim();
+  if(!name||!email) return;
+  pendingRegistrations.push({name:name,email:email});
+  document.getElementById('reg-form-view').classList.add('hidden');
+  document.getElementById('reg-success-view').classList.remove('hidden');
+  renderPendingRegistrations(); saveState();
+}
+function approveRegistration(i){
+  const p=pendingRegistrations.splice(i,1)[0];
+  pushNotification('✅','Neuer Klient bestätigt: '+p.name);
+  renderPendingRegistrations(); saveState();
+}
+function declineRegistration(i){ pendingRegistrations.splice(i,1); renderPendingRegistrations(); saveState(); }
+function renderPendingRegistrations(){
+  const box=document.getElementById('pending-reg-box');
+  if(!box) return;
+  if(!pendingRegistrations.length){ box.innerHTML=''; return; }
+  box.innerHTML = `<p class="text-xs font-semibold text-gray-400 mb-2">🔔 NEUE ANMELDUNGEN — KONTROLLZENTRUM</p>` +
+    pendingRegistrations.map((p,i)=>`
+    <div class="card rounded-xl p-3 mb-2 flex justify-between items-center">
+      <div><p class="text-sm font-medium">${p.name}</p><p class="text-[10px] text-gray-500">${p.email}</p></div>
+      <div class="flex gap-1.5">
+        <button onclick="approveRegistration(${i})" class="px-3 py-1.5 rounded-lg text-[11px] font-semibold" style="background:var(--gold); color:#0A0E17;">✓ Bestätigen</button>
+        <button onclick="declineRegistration(${i})" class="px-2 py-1.5 rounded-lg text-[11px] bg-gray-800 text-gray-400">✕</button>
+      </div>
+    </div>`).join('');
+}
+function navTo(page){
+  document.querySelectorAll('#c-pagewrap .page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById('c-page-'+page).classList.remove('hidden');
+  document.querySelectorAll('#client-main .navbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('c-nav-'+page).classList.add('active');
+  document.getElementById('c-pagewrap').scrollTop=0;
+}
+function navToAdmin(page){
+  document.querySelectorAll('#a-pagewrap .page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById('a-page-'+page).classList.remove('hidden');
+  document.querySelectorAll('#admin-main .navbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('a-nav-'+page).classList.add('active');
+  document.getElementById('a-pagewrap').scrollTop=0;
+}
+function openClient(){ navToAdmin('klienten-liste'); document.getElementById('a-page-klienten-liste').classList.add('hidden'); document.getElementById('a-page-klient-detail').classList.remove('hidden'); refreshAdmin(); renderPerfCurve('ad'); }
+function closeClient(){ document.getElementById('a-page-klient-detail').classList.add('hidden'); document.getElementById('a-page-klienten-liste').classList.remove('hidden'); }
+
+// ============ HEUTE ============
+function renderMacros(){
+  document.getElementById('t-cal-left').textContent = state.calTarget-state.calConsumed;
+  document.getElementById('t-p-cur').textContent=state.proteinCurrent; document.getElementById('t-p-tgt').textContent=state.proteinTarget;
+  document.getElementById('t-c-cur').textContent=state.carbCurrent; document.getElementById('t-c-tgt').textContent=state.carbTarget;
+  document.getElementById('t-f-cur').textContent=state.fatCurrent; document.getElementById('t-f-tgt').textContent=state.fatTarget;
+  document.getElementById('bar-p').style.width=Math.min(100,state.proteinCurrent/state.proteinTarget*100)+'%';
+  document.getElementById('bar-c').style.width=Math.min(100,state.carbCurrent/state.carbTarget*100)+'%';
+  document.getElementById('bar-f').style.width=Math.min(100,state.fatCurrent/state.fatTarget*100)+'%';
+}
+function addWater(l){ state.water=Math.round((state.water+l)*100)/100; refreshWaterUI(); saveState(); }
+function setWaterExact(){ const v=parseFloat(document.getElementById('water-input').value); if(isNaN(v)) return; state.water=v; refreshWaterUI(); document.getElementById('water-input').value=''; saveState(); }
+function refreshWaterUI(){
+  document.getElementById('water-val').textContent=state.water.toFixed(2).replace(/\.?0+$/,'').replace('.',',')+' L';
+  document.getElementById('bar-water').style.width=Math.min(100,state.water/state.waterGoal*100)+'%';
+}
+function logSteps(){ const v=parseInt(document.getElementById('steps-input').value,10); if(!v)return;
+  state.steps=v; document.getElementById('steps-val').textContent=v.toLocaleString('de-DE');
+  document.getElementById('bar-steps').style.width=Math.min(100,v/state.stepsGoal*100)+'%'; document.getElementById('steps-input').value=''; saveState(); }
+function logSleep(){ const v=parseFloat(document.getElementById('sleep-input').value); if(!v)return;
+  state.sleep=v; document.getElementById('sleep-val').textContent=v.toString().replace('.',',')+' Std'; document.getElementById('sleep-input').value=''; saveState(); }
+
+function renderPlanChips(){
+  const opts=[['A','Training A'],['B','Training B'],['C','Training C'],['kondition','Konditionseinheit'],['rest','Regenerationstag']];
+  document.getElementById('plan-chips').innerHTML = opts.map(o=>`<button onclick="selectPlan('${o[0]}')" class="chip ${state.plan===o[0]?'chip-active':''}" id="planchip-${o[0]}">${o[1]}</button>`).join('');
+}
+function selectPlan(p){
+  state.plan=p; renderPlanChips(); saveState();
+  const detail=document.getElementById('plan-detail');
+  if(p==='A'||p==='B'||p==='C'){ detail.innerHTML=`<p class="text-[11px] text-gray-400 mt-1">Training ${p} ist heute geplant. <button onclick="navTo('training')" class="goldtext">Jetzt öffnen →</button></p>`; }
+  else if(p==='rest'){ detail.innerHTML=`<p class="text-[11px] text-gray-400 mt-1">💤 Erhol dich gut — leichte Mobility/Spaziergang optional.</p>`; }
+  else if(p==='kondition'){
+    detail.innerHTML=`<div class="mt-2 space-y-2">
+      <input type="text" id="kondition-art" placeholder="Art (z.B. Laufen, Boxen, Rad)" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs">
+      <input type="number" id="kondition-min" placeholder="Dauer in Minuten" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs">
+      <button onclick="estimateBurn()" id="kondition-btn" class="w-full py-2 rounded-lg text-xs font-semibold" style="background:var(--gold); color:#0A0E17;">KI schätzt Kalorienverbrauch</button>
+      <p id="kondition-result" class="text-[11px] text-gray-400"></p>
+    </div>`;
+  } else { detail.innerHTML=''; }
+}
+async function estimateBurn(){
+  const art=document.getElementById('kondition-art').value.trim(), min=document.getElementById('kondition-min').value;
+  if(!art||!min) return;
+  const btn=document.getElementById('kondition-btn'); btn.disabled=true; btn.textContent='Schätze...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:150,messages:[{role:'user',content:'Schätze verbrannte kcal für: '+min+' Minuten '+art+' bei einer ca. 90kg schweren Person. Antworte NUR JSON: {"kcal":<int>}'}]})});
+    const data=await r.json(); const clean=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim(); const res=JSON.parse(clean);
+    state.calTarget += Math.round(res.kcal); renderMacros();
+    document.getElementById('kondition-result').innerHTML = '✓ ~'+Math.round(res.kcal)+' kcal verbrannt. Du kannst heute '+Math.round(res.kcal)+' kcal mehr essen — dein Budget wurde angepasst.';
+    activityLog.unshift({date:'Heute', label:art+' · '+min+' Min', detail:'~'+Math.round(res.kcal)+' kcal geschätzt (KI)'});
+    pushNotification('🏃','Max hat eine Konditionseinheit geloggt: '+art+' · '+min+' Min');
+    refreshAdmin(); saveState();
+  }catch(e){ document.getElementById('kondition-result').textContent='Schätzung fehlgeschlagen — erneut versuchen.'; }
+  finally{ btn.disabled=false; btn.textContent='KI schätzt Kalorienverbrauch'; }
+}
+
+function renderHabits(){
+  document.getElementById('habits-list').innerHTML = HABITS.map(h=>`
+    <label class="flex items-center justify-between py-1.5 border-b border-gray-800 last:border-0">
+      <span class="text-xs">${h[1]} ${h[2]}</span><input type="checkbox" onchange="toggleHabit('${h[0]}')">
+    </label>`).join('');
+}
+function toggleHabit(key){ habitsChecked[key]=!habitsChecked[key]; saveState(); }
+function renderSupplements(){
+  document.getElementById('supp-list').innerHTML = SUPPLEMENTS.map(s=>`
+    <label class="flex items-center justify-between py-1.5 border-b border-gray-800 last:border-0">
+      <span class="text-xs">${s[0]}<span class="block text-[9px] text-gray-500">${s[1]}</span></span><input type="checkbox" onchange="toggleSupp('${s[0]}')">
+    </label>`).join('');
+}
+function toggleSupp(name){ supplementsChecked[name]=!supplementsChecked[name]; saveState(); }
+
+// ============ TRAINING ============
+function showWorkout(key){
+  ['A','B','C','kondition'].forEach(k=>{ const b=document.getElementById('wtab-'+k);
+    if(k===key){ b.style.background='var(--gold)'; b.style.color='#0A0E17'; } else { b.style.background=''; b.style.color=''; }
+  });
+  const list=document.getElementById('workout-list'); list.innerHTML='';
+  if(key==='kondition'){
+    list.innerHTML = `<div class="card rounded-xl p-3 space-y-2">
+      <input type="text" id="tr-kondition-art" placeholder="Art (z.B. Laufen, Boxen, Rad)" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs">
+      <input type="number" id="tr-kondition-min" placeholder="Dauer in Minuten" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs">
+      <button onclick="trainingKondition()" id="tr-kondition-btn" class="w-full py-2 rounded-lg text-xs font-semibold" style="background:var(--gold); color:#0A0E17;">Speichern & KI-Schätzung</button>
+      <p id="tr-kondition-result" class="text-[11px] text-gray-400"></p>
+    </div>`;
+    return;
+  }
+  workouts[key].forEach((ex,i)=>{ list.innerHTML += renderExerciseCard(key,i,ex); });
+}
+function renderExerciseCard(key, i, ex){
+  const cardKey = key+'_'+i, hasVariants = !!ex[4], confirmed = exVariantState[cardKey];
+  if(hasVariants && !confirmed){
+    const pending = exVariantPending[cardKey];
+    return `<div class="card rounded-xl p-3" id="excard-${cardKey}">
+      <div class="flex justify-between items-center mb-2"><p class="text-sm font-medium">${ex[0]}</p><span class="text-[9px] text-gray-500">${ex[1]} · ${ex[2]}</span></div>
+      <p class="text-[10px] text-gray-500 mb-1.5">Welche Variante trainierst du?</p>
+      <div class="flex gap-2 mb-2">
+        ${ex[4].map(v=>`<button onclick="selectVariant('${key}',${i},'${v}')" class="flex-1 py-2 rounded-lg text-xs font-semibold" style="${pending===v?'background:var(--gold); color:#0A0E17;':'background:#1f2937;'}">${v}</button>`).join('')}
+      </div>
+      <button onclick="confirmVariant('${key}',${i})" ${pending?'':'disabled'} class="w-full py-2 rounded-lg text-xs font-semibold" style="${pending?'background:var(--gold); color:#0A0E17;':'background:#374151; color:#9ca3af;'}">Bestätigen</button>
+    </div>`;
+  }
+  const title = hasVariants ? confirmed : ex[0];
+  const baseW = ex[3][0][0];
+  const w1 = Math.max(5, Math.round(baseW*0.4/2.5)*2.5), w2 = Math.max(5, Math.round(baseW*0.65/2.5)*2.5);
+  const warmupHtml = `<div class="flex items-center gap-2 text-[11px] py-1 opacity-60"><span class="text-gray-500 w-5">W1</span><input class="set-input" value="${w1}"><span class="text-gray-500">kg ×</span><input class="set-input" value="12"><span class="text-gray-500">Wdh</span><span class="text-[9px] text-gray-600">Aufwärmen</span></div>
+    <div class="flex items-center gap-2 text-[11px] py-1 opacity-60"><span class="text-gray-500 w-5">W2</span><input class="set-input" value="${w2}"><span class="text-gray-500">kg ×</span><input class="set-input" value="8"><span class="text-gray-500">Wdh</span><span class="text-[9px] text-gray-600">Aufwärmen</span></div>`;
+  const setsHtml = ex[3].map((s,si)=>`<div class="flex items-center gap-2 text-[11px] py-1"><span class="text-gray-500 w-5">${si+1}</span><input class="set-input" value="${s[0]}"><span class="text-gray-500">kg ×</span><input class="set-input" value="${s[1]}"><span class="text-gray-500">Wdh</span></div>`).join('');
+  return `<div class="card rounded-xl p-3" id="excard-${cardKey}">
+    <div class="flex justify-between items-center mb-1">
+      <p class="text-sm font-medium">${title}${hasVariants?` <button onclick="changeVariant('${key}',${i})" class="text-[9px] goldtext ml-1">Ändern</button>`:''}</p>
+      <span class="text-[9px] text-gray-500 shrink-0">${ex[1]} · ${ex[2]}</span>
+    </div>
+    ${warmupHtml}
+    <div class="border-t border-gray-800 my-1"></div>
+    ${setsHtml}
+    <button onclick="this.previousElementSibling.insertAdjacentHTML('afterend','<div class=\\'flex items-center gap-2 text-[11px] py-1\\'><span class=\\'text-gray-500 w-5\\'>+</span><input class=\\'set-input\\'><span class=\\'text-gray-500\\'>kg ×</span><input class=\\'set-input\\'><span class=\\'text-gray-500\\'>Wdh</span></div>')" class="text-[10px] goldtext mt-1">+ Satz hinzufügen</button>
+  </div>`;
+}
+function selectVariant(key,i,v){ exVariantPending[key+'_'+i]=v; document.getElementById('excard-'+key+'_'+i).outerHTML = renderExerciseCard(key,i,workouts[key][i]); saveState(); }
+function confirmVariant(key,i){ const ck=key+'_'+i; if(!exVariantPending[ck]) return; exVariantState[ck]=exVariantPending[ck]; document.getElementById('excard-'+ck).outerHTML = renderExerciseCard(key,i,workouts[key][i]); saveState(); }
+function changeVariant(key,i){ const ck=key+'_'+i; exVariantState[ck]=null; exVariantPending[ck]=null; document.getElementById('excard-'+ck).outerHTML = renderExerciseCard(key,i,workouts[key][i]); saveState(); }
+
+async function trainingKondition(){
+  const art=document.getElementById('tr-kondition-art').value.trim(), min=document.getElementById('tr-kondition-min').value;
+  if(!art||!min) return;
+  const btn=document.getElementById('tr-kondition-btn'); btn.disabled=true; btn.textContent='Schätze...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:150,messages:[{role:'user',content:'Schätze verbrannte kcal für: '+min+' Minuten '+art+' bei einer ca. 90kg schweren Person. Antworte NUR JSON: {"kcal":<int>}'}]})});
+    const data=await r.json(); const clean=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim(); const res=JSON.parse(clean);
+    state.calTarget += Math.round(res.kcal); renderMacros();
+    document.getElementById('tr-kondition-result').innerHTML = '✓ '+art+' · '+min+' Min — ~'+Math.round(res.kcal)+' kcal verbrannt. Tagesbudget angepasst.';
+    activityLog.unshift({date:'Heute', label:art+' · '+min+' Min', detail:'~'+Math.round(res.kcal)+' kcal geschätzt (KI)'});
+    pushNotification('🏃','Max hat eine Konditionseinheit geloggt: '+art+' · '+min+' Min');
+    refreshAdmin(); saveState();
+  }catch(e){ document.getElementById('tr-kondition-result').textContent='Schätzung fehlgeschlagen.'; }
+  finally{ btn.disabled=false; btn.textContent='Speichern & KI-Schätzung'; }
+}
+function toggleWorkoutMenu(){ alert('Neues freies Workout anlegen — leeres Formular wie „Training A/B/C" zum selbst befüllen.'); }
+function togglePasteBox(){ document.getElementById('paste-box').classList.toggle('hidden'); }
+async function parseWorkout(){
+  const txt=document.getElementById('paste-input').value.trim(); if(!txt) return;
+  const btn=document.getElementById('parse-btn'); btn.disabled=true; btn.textContent='Liest ein...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:'Wandle diesen eingefügten Trainings-Log in strukturierte Übungen um: "'+txt+'". Antworte NUR JSON-Array: [{"exercise":"<name>","sets":[{"weight":<num>,"reps":<num>}]}]'}]})});
+    const data=await r.json(); const clean=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim(); const res=JSON.parse(clean);
+    document.getElementById('parse-result').innerHTML = '<p class="goldtext font-semibold">✓ Erkannt:</p>' + res.map(e=>`<p>${e.exercise}: ${e.sets.map(s=>s.weight+'×'+s.reps).join(', ')}</p>`).join('');
+  }catch(e){ document.getElementById('parse-result').textContent='Einlesen fehlgeschlagen — erneut versuchen.'; }
+  finally{ btn.disabled=false; btn.textContent='Mit KI einlesen'; }
+}
+function renderTrainingOverview(){
+  const tagsHtml = categoryTags.map(t=>`<span class="chip">${t[0]} · ${t[1]}</span>`).join('');
+  document.getElementById('category-tags').innerHTML = tagsHtml;
+  document.getElementById('category-tags-2').innerHTML = tagsHtml;
+  const progHtml = topProgress.map(t=>`<div class="flex justify-between text-[11px]"><span>${t[0]}</span><span style="color:#7DD68B;">+${t[1]}%</span></div>`).join('');
+  document.getElementById('top-progress').innerHTML = progHtml;
+  document.getElementById('top-progress-2').innerHTML = progHtml;
+  renderHistory('history-list');
+  const rangeOpts=['Woche','Monat','Gesamt'];
+  document.getElementById('range-chips-training').innerHTML = rangeOpts.map((r,i)=>`<span class="chip ${i===2?'chip-active':''}">${r}</span>`).join('');
+  renderPerfCurve('c');
+}
+function renderHistory(targetId){
+  document.getElementById(targetId).innerHTML = historyList.map((h,i)=>`
+    <div class="border-b border-gray-800 last:border-0 py-1.5">
+      <button onclick="toggleHist('${targetId}',${i})" class="w-full flex justify-between items-center text-[11px] text-left">
+        <span class="text-gray-500 shrink-0">${h.date}</span><span class="flex-1 px-2">${h.label}</span><span class="text-gray-600" id="histicon-${targetId}-${i}">▾</span>
+      </button>
+      <div class="hidden pt-1.5 pl-2 space-y-1" id="histbody-${targetId}-${i}">
+        ${h.detail.map(d=>`<p class="text-[10px] text-gray-400"><span class="text-gray-300">${d[0]}:</span> ${d[1]}</p>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function toggleHist(target,i){ const b=document.getElementById('histbody-'+target+'-'+i), ic=document.getElementById('histicon-'+target+'-'+i);
+  b.classList.toggle('hidden'); ic.textContent=b.classList.contains('hidden')?'▾':'▴'; }
+
+function renderPerfCurve(prefix){
+  const names = Object.keys(exerciseTrend);
+  document.getElementById(prefix+'-perf-chips').innerHTML = names.map((n,i)=>`<button onclick="selectPerf('${prefix}','${n}')" class="chip ${i===0?'chip-active':''}" id="${prefix}-perfchip-${i}">${n}</button>`).join('');
+  selectPerf(prefix, names[0]);
+}
+function selectPerf(prefix, name){
+  const names = Object.keys(exerciseTrend);
+  document.querySelectorAll('#'+prefix+'-perf-chips .chip').forEach(b=>b.classList.remove('chip-active'));
+  document.getElementById(prefix+'-perfchip-'+names.indexOf(name)).classList.add('chip-active');
+  const data = exerciseTrend[name], weights = data.map(d=>d.w), first=weights[0], last=weights[weights.length-1], delta=last-first, pct=Math.round(delta/first*100);
+  document.getElementById(prefix+'-perf-current').textContent = last+' kg';
+  const trendEl = document.getElementById(prefix+'-perf-trend');
+  if(delta>0){ trendEl.innerHTML='↑ +'+delta+' kg ('+pct+'%) seit '+data[0].d; trendEl.style.color='#7DD68B'; }
+  else if(delta<0){ trendEl.innerHTML='↓ '+delta+' kg ('+pct+'%) seit '+data[0].d; trendEl.style.color='#E27D7D'; }
+  else { trendEl.innerHTML='→ unverändert seit '+data[0].d; trendEl.style.color='#8A93A6'; }
+  const svg=document.getElementById(prefix+'-perf-chart'), min=Math.min(...weights), max=Math.max(...weights);
+  const pts = weights.map((v,i)=> (i/(weights.length-1))*290+5 + ',' + (80 - (v-min)/(max-min||1)*65)).join(' ');
+  svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+// ============ ERNÄHRUNG ============
+const foodLog = [ ["Gegrilltes Teriyaki-Hähnchen","großer Teller",825,58,45,22], ["Super Greens","halbe Beilage",45,3,7,1], ["Chow Mein","halbe Beilage",255,6,40,8], ["Beef Jerky (Teriyaki)","80g",241,26,16,2], ["Pute-Cheddar Halb-Sub","1 Sandwich",350,31,33,10] ];
+function renderFoodLog(target){
+  document.getElementById(target).innerHTML = foodLog.map(f=>`
+    <div class="card rounded-xl p-3 mb-2 flex justify-between items-center">
+      <div><p class="text-xs font-medium">${f[0]}</p><p class="text-[10px] text-gray-500">${f[1]} · P${f[3]} K${f[4]} F${f[5]}</p></div>
+      <span class="text-xs font-semibold goldtext">${f[2]} kcal</span>
+    </div>`).join('');
+}
+function renderBaukasten(){
+  const rows = [ {icon:'palm', name:'Protein', hand:'1 Handfläche', amount:'2 Portionen'}, {icon:'cup', name:'Kohlenhydrate', hand:'1 wölbende Hand/Faust', amount:'1–2 Portionen'}, {icon:'fist', name:'Gemüse', hand:'1 Faust', amount:'unbegrenzt (min. 2)'}, {icon:'thumb', name:'Gesunde Fette', hand:'1 Daumen', amount:'1–2 Portionen'} ];
+  const cdn = 'https://cdn.jsdelivr.net/npm/@svgmoji/twemoji@2.0.0/svg/';
+  const icons = {
+    palm: cdn+'270B.svg',   // ✋ Raised Hand
+    cup:  cdn+'1F450.svg',  // 🤲 Open Hands (Schale)
+    fist: cdn+'270A.svg',   // ✊ Raised Fist
+    thumb:cdn+'1F44D.svg'   // 👍 Thumbs Up
+  };
+  document.getElementById('baukasten-table').innerHTML = rows.map(r=>`
+    <div class="flex items-center gap-3 bg-gray-900 rounded-lg p-2">
+      <div class="shrink-0 w-11 h-11 rounded-full flex items-center justify-center" style="background:#1b2336;">
+        <img src="${icons[r.icon]}" alt="${r.name}" class="w-7 h-7" loading="lazy">
+      </div>
+      <div class="flex-1"><p class="text-xs font-medium">${r.name}</p><p class="text-[10px] text-gray-500">${r.hand}</p></div>
+      <span class="text-[10px] text-gray-400">${r.amount}</span>
+    </div>`).join('') + `<p class="text-[9px] text-gray-600 text-center mt-2">Icons: Twemoji, CC-BY 4.0</p>`;
+}
+function renderMeals(){
+  document.getElementById('meal-accordion').innerHTML = meals.map((m,i)=>`
+    <div class="card rounded-xl overflow-hidden">
+      <button onclick="toggleAcc(${i})" class="w-full flex justify-between items-center p-3 text-left"><span class="text-sm font-semibold">${m.title}</span><span class="text-gray-500" id="acc-icon-${i}">▾</span></button>
+      <div class="hidden px-3 pb-3 space-y-1.5 text-[11px] text-gray-400" id="acc-body-${i}">${m.opts.map((o,j)=>`<p><span class="goldtext">Option ${j+1}:</span> ${o}</p>`).join('')}</div>
+    </div>`).join('');
+}
+function toggleAcc(i){ const b=document.getElementById('acc-body-'+i), ic=document.getElementById('acc-icon-'+i); b.classList.toggle('hidden'); ic.textContent=b.classList.contains('hidden')?'▾':'▴'; }
+function renderShopping(){
+  let html='';
+  Object.keys(shopping).forEach(cat=>{ html+=`<p class="banner rounded-lg px-2 py-1 text-[10px] font-bold mt-2 mb-1">${cat.toUpperCase()}</p>`;
+    shopping[cat].forEach(item=>{ html+=`<label class="flex items-center gap-2 text-xs py-1 border-b border-gray-800"><input type="checkbox"><span>${item}</span></label>`; }); });
+  document.getElementById('shopping-list').innerHTML = html;
+}
+function renderRestaurantGuide(){
+  let html = restaurantGuide.regeln.map((r,i)=>`<p class="text-[11px]"><span class="goldtext font-semibold">Regel ${i+1} — ${r[0]}:</span> ${r[1]}</p>`).join('');
+  html += '<p class="text-xs font-semibold text-gray-300 pt-2">Quick-Guide nach Küche</p>';
+  html += restaurantGuide.kuechen.map(k=>`<p class="text-[11px]"><span class="goldtext font-semibold">${k[0]}:</span> ${k[1]}</p>`).join('');
+  html += `<p class="text-[11px] text-gray-500 pt-1">${restaurantGuide.mindset}</p>`;
+  document.getElementById('restaurant-guide').innerHTML = html;
+}
+async function aiTrack(){
+  const input=document.getElementById('ai-food-input'), btn=document.getElementById('ai-food-btn'), out=document.getElementById('ai-food-result');
+  const q=input.value.trim(); if(!q) return;
+  btn.disabled=true; btn.textContent='Analysiere...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:250,messages:[{role:'user',content:'Schätze Makros für: "'+q+'". Antworte NUR JSON: {"kcal":<int>,"protein":<int>,"carbs":<int>,"fat":<int>,"summary":"<kurz de>"}'}]})});
+    const data=await r.json(); const clean=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim(); const res=JSON.parse(clean);
+    state.calConsumed+=Math.round(res.kcal); state.proteinCurrent+=Math.round(res.protein); state.carbCurrent+=Math.round(res.carbs); state.fatCurrent+=Math.round(res.fat);
+    renderMacros(); out.textContent='✓ '+res.summary+' — '+Math.round(res.kcal)+' kcal geloggt'; input.value='';
+    foodLog.unshift([res.summary,'per KI',Math.round(res.kcal),Math.round(res.protein),Math.round(res.carbs),Math.round(res.fat)]);
+    pushNotification('🍽️','Max hat "'+res.summary+'" geloggt ('+Math.round(res.kcal)+' kcal)');
+    renderFoodLog('food-log'); refreshAdmin(); saveState();
+  }catch(e){ out.textContent='Analyse fehlgeschlagen — erneut versuchen'; }
+  finally{ btn.disabled=false; btn.textContent='Text analysieren'; }
+}
+async function aiTrackPhoto(event){
+  const file=event.target.files[0]; if(!file) return;
+  const out=document.getElementById('ai-food-result'); out.textContent='Foto wird analysiert...';
+  const reader=new FileReader();
+  reader.onload=async ()=>{
+    const base64=reader.result.split(',')[1];
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:250,messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
+          {type:'text',text:'Schätze die Makros für das Essen auf diesem Foto. Antworte NUR JSON: {"kcal":<int>,"protein":<int>,"carbs":<int>,"fat":<int>,"summary":"<kurze de Beschreibung>"}'}
+        ]}]})});
+      const data=await r.json(); const clean=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim(); const res=JSON.parse(clean);
+      state.calConsumed+=Math.round(res.kcal); state.proteinCurrent+=Math.round(res.protein); state.carbCurrent+=Math.round(res.carbs); state.fatCurrent+=Math.round(res.fat);
+      renderMacros(); out.textContent='✓ '+res.summary+' — '+Math.round(res.kcal)+' kcal geloggt (per Foto)';
+      foodLog.unshift([res.summary,'per Foto',Math.round(res.kcal),Math.round(res.protein),Math.round(res.carbs),Math.round(res.fat)]);
+      pushNotification('📷','Max hat ein Essensfoto analysiert: '+res.summary);
+      renderFoodLog('food-log'); refreshAdmin(); saveState();
+    }catch(e){ out.textContent='Foto-Analyse fehlgeschlagen — erneut versuchen.'; }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============ FORTSCHRITT ============
+function drawChart(data){
+  const svg=document.getElementById('weight-chart'); const min=Math.min(...data), max=Math.max(...data);
+  const pts = data.map((v,i)=> (i/(data.length-1))*290+5 + ',' + (95 - (v-min)/(max-min||1)*85)).join(' ');
+  svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+function renderWeightChips(){
+  const keys=['Woche','Monat','Gesamt'];
+  document.getElementById('range-chips-weight').innerHTML = keys.map((k,i)=>`<button onclick="setRange('${k}')" class="chip ${i===2?'chip-active':''}" id="rangechip-${k}">${k}</button>`).join('');
+}
+function setRange(r){ document.querySelectorAll('[id^=rangechip-]').forEach(b=>b.classList.remove('chip-active')); document.getElementById('rangechip-'+r).classList.add('chip-active'); drawChart(weightData[r]); }
+function nextCheckIn(){
+  let d=new Date(state.startDate); const today=new Date();
+  while(d<=today) d.setDate(d.getDate()+7);
+  return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function renderMeta(){
+  document.getElementById('meta-start').textContent = state.startDate.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  document.getElementById('meta-nextcheckin').textContent = nextCheckIn();
+  document.getElementById('meta-zoom').textContent = 'Zoom';
+  document.getElementById('meta-zoom').href = 'https://'+state.zoomLink.replace(/^https?:\/\//,'');
+}
+function addPhoto(e){
+  const f=e.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ photos.push(ev.target.result); renderPhotos(); pushNotification('📸','Max hat ein Fortschrittsfoto hochgeladen'); refreshAdmin(); saveState(); };
+  reader.readAsDataURL(f);
+}
+function renderPhotos(){
+  document.getElementById('photo-grid').innerHTML = photos.map(p=>`<img src="${p}" class="w-full aspect-square object-cover rounded-lg">`).join('');
+}
+
+// ============ CHAT ============
+function quickChat(q){ document.getElementById('chat-input').value=q; sendChat(); }
+async function sendChat(){
+  const input=document.getElementById('chat-input'), btn=document.getElementById('chat-send-btn'), thread=document.getElementById('chat-thread');
+  const q=input.value.trim(); if(!q) return;
+  thread.innerHTML += `<div class="text-right"><span class="inline-block bg-gray-800 rounded-xl px-3 py-2 text-xs">${q}</span></div>`;
+  input.value=''; btn.disabled=true;
+  const ctx = 'Kontext: Klient hat noch '+(state.calTarget-state.calConsumed)+' kcal übrig heute, Protein '+state.proteinCurrent+'/'+state.proteinTarget+'g, '+state.steps+' Schritte, heutiger Plan: '+(state.plan||'noch nicht gewählt')+'. Antworte als freundlicher Fitness-Coach kurz (max 2 Sätze) auf Deutsch.';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:150,messages:[{role:'user',content:ctx+' Frage: '+q}]})});
+    const data=await r.json(); const answer=data.content.map(b=>b.text||'').join('');
+    thread.innerHTML += `<div class="text-left"><span class="inline-block card rounded-xl px-3 py-2 text-xs">${answer}</span></div>`;
+    chatLog.unshift({q:q,a:answer}); pushNotification('💬','Max fragt: "'+q+'"'); refreshAdmin(); saveState();
+  }catch(e){ thread.innerHTML += `<div class="text-left"><span class="inline-block card rounded-xl px-3 py-2 text-xs">Antwort fehlgeschlagen — erneut versuchen.</span></div>`; }
+  finally{ btn.disabled=false; document.getElementById('c-pagewrap').scrollTop=9999; }
+}
+
+// ============ ADMIN ============
+function calc(){
+  const sex=document.getElementById('c-sex').value, age=+document.getElementById('c-age').value, h=+document.getElementById('c-height').value, w=+document.getElementById('c-weight').value;
+  const pal=+document.getElementById('c-pal').value, fat=document.getElementById('c-fat').checked, muscle=document.getElementById('c-muscle').checked;
+  const bmr = sex==='m' ? (10*w+6.25*h-5*age+5) : (10*w+6.25*h-5*age-161);
+  const tdee=bmr*pal;
+  let factor=1.0; if(fat&&muscle) factor=0.95; else if(fat) factor=0.8; else if(muscle) factor=1.1;
+  const cal=tdee*factor, protein=w*2.0, fatG=w*1.0, carbs=Math.max((cal-protein*4-fatG*9)/4,0);
+  document.getElementById('out-bmr').textContent=Math.round(bmr)+' kcal';
+  document.getElementById('out-tdee').textContent=Math.round(tdee)+' kcal';
+  document.getElementById('out-cal').textContent=Math.round(cal)+' kcal';
+  document.getElementById('out-protein').textContent=Math.round(protein)+'g';
+  document.getElementById('out-fatcarb').textContent=Math.round(fatG)+'g / '+Math.round(carbs)+'g';
+  window._calc={cal:Math.round(cal),protein:Math.round(protein),fat:Math.round(fatG),carbs:Math.round(carbs)};
+}
+function pushToClient(){ if(!window._calc) return;
+  state.calTarget=window._calc.cal; state.proteinTarget=window._calc.protein; state.fatTarget=window._calc.fat; state.carbTarget=window._calc.carbs;
+  renderMacros(); saveState(); alert('✓ Neue Sollwerte an Klienten-App gesendet.'); }
+function refreshAdmin(){
+  document.getElementById('ad-steps').textContent = state.steps.toLocaleString('de-DE');
+  document.getElementById('ad-water').textContent = state.water.toFixed(1).replace('.',',')+' L';
+  document.getElementById('ad-sleep').textContent = state.sleep ? state.sleep+' Std' : '–';
+  document.getElementById('ad-activity').innerHTML = activityLog.length ? activityLog.map(a=>`<div class="flex justify-between"><span class="text-gray-400">${a.date} · ${a.label}</span><span class="goldtext">${a.detail}</span></div>`).join('') : '<p class="text-gray-600">Noch keine Aktivitäten.</p>';
+  renderHistory('ad-training-log');
+  document.getElementById('ad-food-log').innerHTML = foodLog.map(f=>`<div class="flex justify-between"><span class="text-gray-400">${f[0]}</span><span>${f[2]} kcal</span></div>`).join('');
+  const hDone=Object.values(habitsChecked).filter(Boolean).length, sDone=Object.values(supplementsChecked).filter(Boolean).length;
+  document.getElementById('ad-habits-pct').textContent = Math.round(hDone/HABITS.length*100)+'%';
+  document.getElementById('ad-supp-pct').textContent = Math.round(sDone/SUPPLEMENTS.length*100)+'%';
+  document.getElementById('ad-photo-grid').innerHTML = photos.map(p=>`<img src="${p}" class="w-full aspect-square object-cover rounded-lg">`).join('');
+  document.getElementById('ad-photo-empty').style.display = photos.length ? 'none' : 'block';
+  document.getElementById('ad-chat-log').innerHTML = chatLog.length ? chatLog.map(c=>`<p><span class="text-gray-500">Klient:</span> ${c.q}<br><span class="text-gray-500">Coach-KI:</span> ${c.a}</p>`).join('<hr class="border-gray-800 my-1">') : '<p class="text-gray-600">Noch keine Fragen gestellt.</p>';
+  document.getElementById('ad-nextcheckin').textContent = nextCheckIn();
+}
+function setVar(name,val){ document.documentElement.style.setProperty(name,val); }
+function resetTheme(){ setVar('--gold','#D4AF61'); setVar('--bronze','#A67C43'); setVar('--card','#121A2C'); }
+function updateZoom(){ state.zoomLink=document.getElementById('settings-zoom').value; renderMeta(); saveState(); }
+
+// ============ INIT ============
+async function initApp(){
+  const loader = document.getElementById('app-loader');
+  await loadState();
+  renderMacros(); refreshWaterUI(); renderPlanChips(); renderHabits(); renderSupplements(); showWorkout('A'); renderTrainingOverview();
+  renderFoodLog('food-log'); renderBaukasten(); renderMeals(); renderShopping(); renderRestaurantGuide();
+  renderWeightChips(); drawChart(weightData['Gesamt']); renderMeta(); renderPhotos(); calc(); refreshAdmin(); renderPostfach(); renderPendingRegistrations();
+  applyContentOverrides();
+  if(loader) loader.classList.add('hidden');
+}
+initApp();
+</script>
+</body>
+</html>
