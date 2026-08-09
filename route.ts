@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { createClient } from './lib/supabase-server'
 
 // Alle KI-Aufrufe (Food-Erkennung, Workout-Parser, Coach-Chat, Kalorienschätzung)
 // laufen durch DIESEN Endpunkt statt direkt vom Browser aus.
