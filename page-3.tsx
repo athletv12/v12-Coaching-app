@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase-browser'
+import { createClient } from './lib/supabase-browser'
 
 // Beispiel-Seite: Registrierung per E-Mail (Magic Link).
 // Nach Klick erhält der Klient eine E-Mail mit Login-Link von Supabase.
