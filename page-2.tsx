@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase-server'
+import { createClient } from './lib/supabase-server'
+
 import Link from 'next/link'
 
 // Beispiel-Seite für den Coach-Bereich.
