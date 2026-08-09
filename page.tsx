@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server'
+import { createClient } from './lib/supabase-server'
 
 // Beispiel-Seite für den Klienten-Bereich.
 // Dieselbe Bauweise wie die Coach-Seite (kein "where user_id" nötig) —
